@@ -1,0 +1,118 @@
+.nodeEnabledButton {
+  border: 2px solid powderblue;
+}
+
+body {
+  display:flex;
+  flex-direction:row;
+  background-image: linear-gradient(to right top, #fc986f, #ec8181, #cf7390, #a86b96, #7e6491);
+  justify-content: space-evenly;
+}
+
+input {
+  background-color: transparent;
+  border: 1px solid #eeeeee;
+  border-radius: 15px;
+  font-size: 15px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin-bottom: 15px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+* {
+  font-family: 'Quicksand', sans-serif;
+  color: #eeeeee;
+}
+
+p {
+  margin: 0px;
+  font-size: 20px;
+}
+
+button.node {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+button.nodeSelected {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  background-color: #eeeeee;
+  color: #333333;
+}
+
+button {
+  background-color: transparent;
+  border: 1px solid #eeeeee;
+  border-radius: 15px;
+  font-size: 15px;
+}
+
+.updown:hover {
+  background-color: #eeeeee;
+  color: #333333;
+}
+
+button:hover {
+  cursor: pointer;
+}
+
+.hidden {
+  visibility: hidden;
+  width: 0px;
+  height: 0px;
+  padding: 0px;
+  border: 0px;
+  margin: 0px;
+}
+
+.hiddenSameSize {
+  visibility: hidden;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+button.updown {
+  width: 25px;
+  height: 25px;
+}
+
+progress {
+  border: 1px solid black;
+  width: 200px;
+  height: 25px;
+  background: crimson;
+  border-radius: 15px;
+}
+
+progress {
+  color: lightblue;
+}
+
+progress::-moz-progress-bar {
+  background: lightcolor;
+}
+
+progress::-webkit-progress-value {
+  background: red;
+  border-radius: 15px;
+}
+
+progress::-webkit-progress-bar {
+  background: blue;
+  border-radius: 15px;
+}
+
+canvas {
+  margin-left: 50px;
+  margin-right: 50px;
+}
