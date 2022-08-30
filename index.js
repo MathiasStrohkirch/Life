@@ -1103,6 +1103,14 @@ function enableDisableOutputNode(index) {
 }
 
 function run() {
+  const a = document.createElement('a');
+  const file = new Blob(["hey buddy"], {type: 'text/plain'});
+  
+  a.href= URL.createObjectURL(file);
+  a.download = 'hey.txt';
+  a.click();
+
+	URL.revokeObjectURL(a.href);
   input_count = 0;
 
   for (const enabled of enabledInputNodes) {
