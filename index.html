@@ -1,0 +1,80 @@
+<html>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand&display=swap" rel="stylesheet">
+    <head>
+        <script defer src="./index.js"></script>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div>
+            <p>Generations</p>
+            <input id="generations" type="number" oninput="changeGenerations(this.value)"/>
+            <button type="button" onclick="decreaseGenerations()" class="updown">-</button>
+            <button type="button" onclick="increaseGenerations()" class="updown">+</button>
+            <p>Cycles</p>
+            <input id="cycles" type="number" oninput="changeCycles(this.value)"/>
+            <button type="button" onclick="decreaseCycles()" class="updown">-</button>
+            <button type="button" onclick="increaseCycles()" class="updown">+</button>
+            <p>Entities</p>
+            <input id="entities" type="number" oninput="changeEntities(this.value)"/>
+            <button type="button" onclick="decreaseEntities()" class="updown">-</button>
+            <button type="button" onclick="increaseEntities()" class="updown">+</button>
+            <p>Precision</p>
+            <input id="precision" type="number" oninput="changePrecision(this.value)"/>
+            <button type="button" onclick="decreasePrecision()" class="updown">-</button>
+            <button type="button" onclick="increasePrecision()" class="updown">+</button>
+            <p>Connections</p>
+            <input id="connections" type="number" oninput="changeConnections(this.value)"/>
+            <button type="button" onclick="decreaseConnections()" class="updown">-</button>
+            <button type="button" onclick="increaseConnections()" class="updown">+</button>
+            <p>Mutation Probability</p>
+            <input id="mutationProbability" type="number" oninput="changeMutationProbability(this.value)"/>
+            <button type="button" onclick="decreaseMutationProbability()" class="updown">-</button>
+            <button type="button" onclick="increaseMutationProbability()" class="updown">+</button>
+            <p>Reactiveness</p>
+            <input id="reactiveness" type="number" oninput="changeReactiveness(this.value)"/>
+            <button type="button" onclick="decreaseReactiveness()" class="updown">-</button>
+            <button type="button" onclick="increaseReactiveness()" class="updown">+</button>
+            <p>Inner Nodes</p>
+            <input id="inner" type="number" oninput="changeInner(this.value)"/>
+            <button type="button" onclick="decreaseInner()" class="updown">-</button>
+            <button type="button" onclick="increaseInner()" class="updown">+</button>
+            
+            <div class="column">
+                <button id="randomInput" class="nodeSelected" onclick="enableDisableInputNode(0)">Random Input</button>
+                <button id="positiveInput" class="nodeSelected" onclick="enableDisableInputNode(1)">Positive Input</button>
+                <button id="negativeInput" class="nodeSelected" onclick="enableDisableInputNode(2)">Negative Input</button>
+                <button id="xInput" class="nodeSelected" onclick="enableDisableInputNode(3)">X Input</button>
+                <button id="rightOutput" class="nodeSelected" onclick="enableDisableOutputNode(0)">Right Output</button>
+                <button id="upOutput" class="nodeSelected" onclick="enableDisableOutputNode(1)">Up Output</button>
+                <button id="leftOutput" class="nodeSelected" onclick="enableDisableOutputNode(2)">Left Output</button>
+                <button id="downOutput" class="nodeSelected" onclick="enableDisableOutputNode(3)">Down Output</button>
+            </div>
+            </br>
+            <button id="run" type="button" onclick="run()">Run</button>
+            </br>
+            <p id="runProgress"></p>
+        </div>
+        <canvas id="canvas" width="900" height="900" style="border:1px solid #eeeeee;" class="hiddenSameSize">
+        </canvas>
+        <div id="canvasControls" class="hiddenSameSize">
+            <p id="generationLabel">Generation</p>
+            <input id="generation" type="number" min="0" step="1" oninput="changeGeneration(this.value)"/>
+            <button type="button" onclick="decreaseGeneration()" class="updown">-</button>
+            <button type="button" onclick="increaseGeneration()" class="updown">+</button>
+            <p id="cycleLabel">Cycle </p>
+            <input id="cycle" type="number" min="0" step="1" oninput="changeCycle(this.value)"/>
+            <button type="button" onclick="decreaseCycle()" class="updown">-</button>
+            <button type="button" onclick="increaseCycle()" class="updown">+</button>
+            <p id="speedLabel">Speed </p>
+            <input id="speed" type="number" min="0" step="1" oninput="changeSpeed(this.value)"/>
+            <button type="button" onclick="decreaseSpeed()" class="updown">-</button>
+            <button type="button" onclick="increaseSpeed()" class="updown">+</button>
+            </br>
+            <button id="playPause" type="button" onclick="playPause()">Play</button>
+            </br>
+            <canvas id="neuralNetworkCanvas" width="230" height="300" style="margin:0px; margin-top: 25px"/>
+        </div>
+    </body>
+</html>
