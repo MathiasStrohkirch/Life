@@ -8,10 +8,6 @@
     </head>
     <body>
         <div>
-            <p>Generations</p>
-            <input id="generations" type="number" oninput="changeGenerations(this.value)"/>
-            <button type="button" onclick="decreaseGenerations()" class="updown">-</button>
-            <button type="button" onclick="increaseGenerations()" class="updown">+</button>
             <p>Cycles</p>
             <input id="cycles" type="number" oninput="changeCycles(this.value)"/>
             <button type="button" onclick="decreaseCycles()" class="updown">-</button>
@@ -51,6 +47,7 @@
                 <button id="leftOutput" class="nodeSelected" onclick="enableDisableOutputNode(2)">Left Output</button>
                 <button id="downOutput" class="nodeSelected" onclick="enableDisableOutputNode(3)">Down Output</button>
             </div>
+
             </br>
             <button id="run" type="button" onclick="run()">Run</button>
             </br>
@@ -60,13 +57,9 @@
         </canvas>
         <div id="canvasControls" class="hiddenSameSize">
             <p id="generationLabel">Generation</p>
-            <input id="generation" type="number" min="0" step="1" oninput="changeGeneration(this.value)"/>
-            <button type="button" onclick="decreaseGeneration()" class="updown">-</button>
-            <button type="button" onclick="increaseGeneration()" class="updown">+</button>
+            <p id="generation"/>
             <p id="cycleLabel">Cycle </p>
-            <input id="cycle" type="number" min="0" step="1" oninput="changeCycle(this.value)"/>
-            <button type="button" onclick="decreaseCycle()" class="updown">-</button>
-            <button type="button" onclick="increaseCycle()" class="updown">+</button>
+            <p id="cycle"/>
             <p id="speedLabel">Speed </p>
             <input id="speed" type="number" min="0" step="1" oninput="changeSpeed(this.value)"/>
             <button type="button" onclick="decreaseSpeed()" class="updown">-</button>

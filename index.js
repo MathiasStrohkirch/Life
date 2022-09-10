@@ -216,18 +216,18 @@ neuralNetworkContext.font = "30px Monospace";
 canvas.addEventListener('click', (e) => click(e), false);
 let can_overlap = false;
 
+let entities = null;
 let playing = false;
 let generation = 0;
-let cycle = -1;
+let cycle = 0;
 let speed = 5;
 let amount = 100;
 let cycles = 100;
-let generations = 50;
 let enabledInputNodes = [true, true, true, true];
 let enabledOutputNodes = [true, true, true, true];
-let drawingData = [];
+let drawingData = null;
+let nextRunId = 0;
 
-document.getElementById('generations').value = generations;
 document.getElementById('cycles').value = cycles;
 document.getElementById('entities').value = amount;
 document.getElementById('precision').value = precision;
@@ -235,6 +235,7 @@ document.getElementById('connections').value = connections;
 document.getElementById('mutationProbability').value = mutationProbability;
 document.getElementById('reactiveness').value = reactiveness;
 document.getElementById('inner').value = inner_count;
+document.getElementById('speed').value = speed;
 
 function get_gene_length() {
   return get_bits_required(input_count + inner_count) + get_bits_required(inner_count + output_count) + precision
@@ -432,7 +433,7 @@ class Entity {
   }
 
   success() {
-    return this.x > 45 && this.x < 55
+    return this.x > 90
   }
 
   generate_brain() {
@@ -680,8 +681,7 @@ class Entity {
         if (connection.output_node instanceof Inner) {
           for (let j = 0; j < this.inner_neurons.length; j++) {
             if (connection.output_node == this.inner_neurons[j]) {
-              // console.log(connection.weight / Math.pow(2, precision - 1))
-              connections.push({type: 'connection', parameters: [25, i * 80 + 25 + input_neuron_offset, 115, j * 80 + 25 + inner_neuron_offset, connection.weight / Math.pow(2, precision - 1)]})
+               connections.push({type: 'connection', parameters: [25, i * 80 + 25 + input_neuron_offset, 115, j * 80 + 25 + inner_neuron_offset, connection.weight / Math.pow(2, precision - 1)]})
               count++;
             }
           }
@@ -717,33 +717,15 @@ class Entity {
   }
 }
 
-function nextCycle() {
-  cycle++;
-
-  if (cycle >= cycles) {
-    generation++;
-    cycle = 0
-  }
-}
-
-function drawNextCycle(recursive) {
-  nextCycle();
-  document.getElementById('generation').value = generation;
-  document.getElementById('cycle').value = cycle;
-
-  drawCycle();
-
-  if (recursive && generation < generations && playing) {
-    setTimeout(() => drawNextCycle(true), Math.pow(2, 11 - speed));
-  }
-}
-
 function drawCycle() {
   clearCanvas();
 
-  for (const entity of drawingData[generation][cycle].entities) {
+  for (const entity of drawingData.entities) {
     drawEntity(entity.x, entity.y);
   }
+
+  document.getElementById('cycle').innerHTML = cycle;
+  document.getElementById('generation').innerHTML = generation;
 }
 
 function drawNeuralNetwork(data) {
@@ -813,43 +795,10 @@ function playPause() {
   playing = !playing;
   if (playing) {
     document.getElementById('playPause').innerHTML = 'Pause'
-    drawNextCycle(true);
   }
   else {
     document.getElementById('playPause').innerHTML = 'Play'
   }
-}
-
-function next() {
-  nextCycle();
-  
-  drawCycle();
-}
-
-function previous() {
-  previousCycle();
-
-  drawCycle();
-}
-
-function changeGeneration(value) {
-  if (value < 0 || value >= generations) {
-    return
-  }
-
-  generation = Math.round(value);
-
-  drawCycle();
-}
-
-function changeCycle(value) {
-  if (value < 0 || value >= cycles) {
-    return
-  }
-
-  cycle = Math.round(value);
-
-  drawCycle();
 }
 
 function changeSpeed(value) {
@@ -858,14 +807,6 @@ function changeSpeed(value) {
   }
 
   speed = Math.round(value);
-}
-
-function changeGenerations(value) {
-  if (value < 1) {
-    return
-  }
-  
-  generations = value;
 }
 
 function changeCycles(value) {
@@ -922,18 +863,6 @@ function changeInner(value) {
   }
   
   inner_count = value;
-}
-
-function decreaseGenerations() {
-  if (generations > 1) {
-    generations--;
-    document.getElementById('generations').value = generations;
-  }
-}
-
-function increaseGenerations() {
-  generations++;
-  document.getElementById('generations').value = generations;
 }
 
 function decreaseCycles() {
@@ -1026,38 +955,6 @@ function increaseInner() {
   document.getElementById('inner').value = inner_count;
 }
 
-function decreaseGeneration() {
-  if (generation >= 1) {
-    generation --;
-    document.getElementById('generation').value = generation;
-    drawCycle();
-  }
-}
-
-function increaseGeneration() {
-  if (generation < generations - 1) {
-    generation ++;
-    document.getElementById('generation').value = generation;
-    drawCycle();
-  }
-}
-
-function decreaseCycle() {
-  if (cycle >= 1) {
-    cycle --;
-    document.getElementById('cycle').value = cycle;
-    drawCycle();
-  }
-}
-
-function increaseCycle() {
-  if (cycle < cycles - 1) {
-    cycle ++;
-    document.getElementById('cycle').value = cycle;
-    drawCycle();
-  }
-}
-
 function decreaseSpeed() {
   if (speed >= 1) {
     speed --;
@@ -1075,8 +972,8 @@ function increaseSpeed() {
 function click(e) {
   const x = Math.floor(e.offsetX / (e.target.clientWidth / 100));
   const y = Math.floor(e.offsetY / (e.target.clientHeight / 100));
-  if (x in drawingData[generation][cycle].neuralNetworks && y in drawingData[generation][cycle].neuralNetworks[x]) {
-    drawNeuralNetwork(drawingData[generation][cycle].neuralNetworks[x][y])
+  if (x in drawingData.neuralNetworks && y in drawingData.neuralNetworks[x]) {
+    drawNeuralNetwork(drawingData.neuralNetworks[x][y])
   }
 }
 
@@ -1103,14 +1000,6 @@ function enableDisableOutputNode(index) {
 }
 
 function run() {
-  const a = document.createElement('a');
-  const file = new Blob(["hey buddy"], {type: 'text/plain'});
-  
-  a.href= URL.createObjectURL(file);
-  a.download = 'hey.txt';
-  a.click();
-
-	URL.revokeObjectURL(a.href);
   input_count = 0;
 
   for (const enabled of enabledInputNodes) {
@@ -1159,109 +1048,176 @@ function run() {
     }
   }
 
-  document.getElementById('run').className = 'hidden'
+  document.getElementById('run').className = ''
   document.getElementById('runProgress').className = ''
-  document.getElementById('canvas').className = 'hiddenSameSize'
-  document.getElementById('canvasControls').className = 'hiddenSameSize'
+  document.getElementById('canvas').className = ''
+  document.getElementById('canvasControls').className = ''
 
-  let entities = []
-  drawingData = []
-    
+  entities = []
+  cycle = 0
+  generation = 0
+
   for (let i = 0; i < amount; i++) {
     entities.push(new Entity())
   }
     
-  runGeneration(0, entities);
+  for (const entity of entities) {
+    entity.generate_genome()
+  }
+
+  runCycle(nextRunId++);
 }
 
-function runGeneration(i, entities) {
-  if (i === 0) {
+function runCycle(id) {
+  if (id !== nextRunId - 1) {
+    return;
+  }
+
+  if (cycle === 0) {
     for (const entity of entities) {
-      entity.generate_genome()
+      entity.generate_brain()
     }
   }
 
-  let generationDrawingData = []
+  drawingData = {entities: [], neuralNetworks: {}}
 
   for (const entity of entities) {
-    entity.generate_brain()
-  }
+    entity.cycle();
 
-  for (let j = 0; j < cycles; j++) {
-    let cycleDrawingData = {entities: [], neuralNetworks: {}};
+    drawingData.entities.push({x: entity.x, y: entity.y})
 
-    for (const entity of entities) {
-      try {
-        entity.cycle()
-      }
-      catch(e) {
-        console.log(entity)
-        throw(e)
-      }
-      cycleDrawingData.entities.push({x: entity.x, y: entity.y})
-      if (entity.x in cycleDrawingData.neuralNetworks) {
-        if (entity.y in cycleDrawingData.neuralNetworks[entity.x]) {
-          cycleDrawingData.neuralNetworks[entity.x][entity.y].push(entity.getNeuralNetworkData())
-        }
-        else {
-          cycleDrawingData.neuralNetworks[entity.x][entity.y] = [entity.getNeuralNetworkData()]
-        }
+    if (entity.x in drawingData.neuralNetworks) {
+      if (entity.y in drawingData.neuralNetworks[entity.x]) {
+        drawingData.neuralNetworks[entity.x][entity.y].push(entity.getNeuralNetworkData())
       }
       else {
-        let temp = {}
-        temp[entity.y] = [entity.getNeuralNetworkData()]
-        cycleDrawingData.neuralNetworks[entity.x] = temp
+        drawingData.neuralNetworks[entity.x][entity.y] = [entity.getNeuralNetworkData()]
+      }
+    }
+    else {
+      let temp = {}
+      temp[entity.y] = [entity.getNeuralNetworkData()]
+      drawingData.neuralNetworks[entity.x] = temp
+    }
+  }
+
+  if (cycle === cycles - 1) {
+    let parents = []
+
+    for (const entity of entities) {
+      if (entity.success()) {
+        parents.push(entity);
       }
     }
 
-    generationDrawingData.push(cycleDrawingData);
-  }
+    if (parents.length === 0) {
+      parents = [...entities]
+    }
 
-  drawingData.push(generationDrawingData);
+    entities = [];
 
-  let parents = []
+    for (let j = 0; j < amount; j++) {
+      entities.push(parents[Math.floor(Math.random() * parents.length)].combine(parents[Math.floor(Math.random() * parents.length)]))
+    }
 
-  for (const entity of entities) {
-    if (entity.success()) {
-      parents.push(entity);
+    for (const entity of entities) {
+      entity.mutate();
     }
   }
 
-  if (parents.length === 0) {
-    parents = [...entities]
-    console.log('Generation: ', i, '     Percent success: ', 0);
+  drawCycle();
+
+  cycle++;
+
+  if (cycle === +cycles) {
+    cycle = 0;
+    generation++;
+  }
+
+  if (playing) {
+    setTimeout(() => runCycle(id), Math.pow(2, 11 - speed));
   }
   else {
-    console.log('Generation: ', i, '     Percent success: ', parents.length / amount * 100);
+    setTimeout(() => wait(id))
   }
+}
 
-  document.getElementById('runProgress').innerHTML = Math.round(i / (generations - 1) * 100) + '%';
-
-  entities = [];
-
-  for (let j = 0; j < amount; j++) {
-    entities.push(parents[Math.floor(Math.random() * parents.length)].combine(parents[Math.floor(Math.random() * parents.length)]))
-  }
-
-  for (const entity of entities) {
-    entity.mutate();
-  }
-
-  i++;
-
-  if (i < generations) {
-    setTimeout(() => runGeneration(i, entities))
+function wait(id) {
+  if (playing) {
+    setTimeout(() => runCycle(id));
   }
   else {
-    document.getElementById('run').className = '';
-    document.getElementById('runProgress').className = 'hidden';
-    document.getElementById('canvas').className = ''
-    document.getElementById('canvasControls').className = ''
-    document.getElementById('speed').value = speed
-  
-    generation = 0;
-    cycle = -1;
-  
-    drawNextCycle(true);
+    setTimeout(() => wait(id));
   }
+}
+
+function createSelect(options) {
+  const select = document.createElement('div');
+  const selected = document.createElement('div');
+
+  selected.className = 'selected';
+
+  selected.appendChild(document.createTextNode(options[0]))
+
+  selected.onmouseenter = () => mouseEnter(dropdown);
+  select.onmouseleave = () => mouseLeave(dropdown);
+
+  const dropdown = document.createElement('div');
+
+  dropdown.className = 'dropdown'
+
+  select.appendChild(selected);
+  select.appendChild(dropdown);
+
+  for (let i = 0; i < options.length; i++) {
+
+    const element = document.createElement('button');
+
+    element.appendChild(document.createTextNode(options[i]))
+
+    if (i === 0) {
+      element.className = 'option firstOption'
+    }
+    else if(i < options.length - 1) {
+      element.className = 'option'
+    }
+    else {
+      element.className = 'option lastOption'
+    }
+
+    dropdown.appendChild(element);
+  }
+
+  document.getElementById('goals').insertBefore(select, document.getElementById('addGoal'))
+}
+
+function mouseEnter(dropdown) {
+  dropdown.className = 'dropdown open';
+}
+
+function mouseLeave(dropdown) {
+  dropdown.className = 'dropdown';
+}
+
+// createSelect(['hey', 'how', 'are', 'you'])
+
+function addGoal() {
+  let goal = document.createElement('div');
+  let select = document.createElement('select')
+  let option = document.createElement('option')
+
+  option.value = 'heyo'
+  option.appendChild(document.createTextNode('heyo'))
+  select.appendChild(option)
+
+  let option2 = document.createElement('option')
+
+  option2.value = 'wut'
+  option2.appendChild(document.createTextNode('wut'))
+  select.appendChild(option2)
+
+
+  goal.appendChild(select)
+
+  document.getElementById('goals').insertBefore(goal, document.getElementById('addGoal'))
 }

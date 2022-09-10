@@ -1,7 +1,3 @@
-.nodeEnabledButton {
-  border: 2px solid powderblue;
-}
-
 body {
   display:flex;
   flex-direction:row;
@@ -115,4 +111,64 @@ progress::-webkit-progress-bar {
 canvas {
   margin-left: 50px;
   margin-right: 50px;
+}
+
+.goal {
+  border: 1px solid #eeeeee;
+  border-radius: 15px;
+  padding: 10px;
+}
+
+.option {
+  border-bottom: 1px solid #eeeeee;
+  font-size: 15px;
+  padding: 5px;
+  background-color: #eeeeee;
+  color: #333333
+}
+
+.option:hover {
+  background-color: #333333;
+  color: #eeeeee;
+  cursor: pointer;
+}
+
+.firstOption {
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+.lastOption {
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+}
+
+.dropdown {
+  position: absolute;
+  opacity: 0;
+  height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.open {
+  animation-name: dropdown;
+  animation-duration: .5s;
+  opacity: 1;
+  height: auto;
+}
+
+.selected:hover {
+  cursor: pointer;
+}
+
+@keyframes dropdown {
+  0% { 
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+    height: auto;
+  }
 }
