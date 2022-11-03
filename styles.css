@@ -5,6 +5,25 @@ body {
   justify-content: space-evenly;
 }
 
+.switchRow {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #eeeeee;
+  border-radius: 5px;
+}
+
 input {
   background-color: transparent;
   border: 1px solid #eeeeee;
@@ -67,8 +86,14 @@ button:hover {
   margin: 0px;
 }
 
+.leftSidebar {
+  overflow: auto;
+  padding: 20px;
+}
+
 .hiddenSameSize {
   visibility: hidden;
+  padding: 20px;
 }
 
 input::-webkit-outer-spin-button,
@@ -82,32 +107,6 @@ button.updown {
   height: 25px;
 }
 
-progress {
-  border: 1px solid black;
-  width: 200px;
-  height: 25px;
-  background: crimson;
-  border-radius: 15px;
-}
-
-progress {
-  color: lightblue;
-}
-
-progress::-moz-progress-bar {
-  background: lightcolor;
-}
-
-progress::-webkit-progress-value {
-  background: red;
-  border-radius: 15px;
-}
-
-progress::-webkit-progress-bar {
-  background: blue;
-  border-radius: 15px;
-}
-
 canvas {
   margin-left: 50px;
   margin-right: 50px;
@@ -117,14 +116,19 @@ canvas {
   border: 1px solid #eeeeee;
   border-radius: 15px;
   padding: 10px;
+  position: sticky;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .option {
-  border-bottom: 1px solid #eeeeee;
   font-size: 15px;
   padding: 5px;
   background-color: #eeeeee;
-  color: #333333
+  color: #333333;
+  padding-left: 6px;
+  padding-right: 6px;
+
 }
 
 .option:hover {
@@ -133,29 +137,32 @@ canvas {
   cursor: pointer;
 }
 
-.firstOption {
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
-}
-
-.lastOption {
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
-}
-
-.dropdown {
-  position: absolute;
-  opacity: 0;
-  height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 .open {
   animation-name: dropdown;
   animation-duration: .5s;
-  opacity: 1;
   height: auto;
+}
+
+.select {
+  display: inline-block;
+  border: 1px solid #eeeeee;
+  border-radius: 15px;
+  height: 30px;
+  overflow: hidden;
+  position: absolute;
+  text-align: center;
+}
+
+.select:hover {
+  animation-name: dropdown;
+  animation-duration: .25s;
+  height: auto;
+  z-index: 1;
+}
+
+.selected {
+  display: inline-block;
+  padding: 5px;
 }
 
 .selected:hover {
@@ -163,12 +170,164 @@ canvas {
 }
 
 @keyframes dropdown {
-  0% { 
-    opacity: 0;
+  0% {
+    height: 30px;
   }
 
   100% {
-    opacity: 1;
-    height: auto;
+    height: var(--height);
   }
+}
+
+.dropdown {
+  max-height: 102px;
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+}
+.dropdown::-webkit-scrollbar { /* WebKit */
+  width: 0;
+  height: 0;
+}
+
+.space {
+  height: 42px;
+}
+
+.small {
+  width: 50px;
+}
+
+.deleteButton {
+  position: absolute;
+  right: 5;
+  top: 5;
+  padding: 0;
+  border: none;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 25px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border: 1px solid #eeeeee;
+  background-color: transparent;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 17px;
+  width: 17px;
+  left: 2px;
+  bottom: 2px;
+  background-color: transparent;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+  border: 1px solid #eeeeee;
+  background-color: transparent;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(19px);
+  -ms-transform: translateX(19px);
+  transform: translateX(19px);
+}
+
+input:checked ~ .slider::before {
+  background-color: #eeeeee;
+}
+
+.sliderOption {
+  margin-left: 10px;
+}
+
+.gene {
+  border: 1px solid #eeeeee;
+  border-radius: 15px;
+  position: sticky;
+  margin: 10px;
+}
+
+.test {
+  border: 1px solid #eeeeee;
+  border-radius: 15px;
+}
+
+.testExpander {
+  border: none;
+  border-radius: 0;
+  width: 100%;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: left;
+}
+
+.testExpander:hover {
+  background-color: #eeeeee;
+  color: #333333;
+}
+
+.numberSlider {
+  -webkit-appearance: none;
+  width: 100px;
+  height: 5px;
+  border-radius: 5px;  
+  background: #eeeeee;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.numberSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%; 
+  background: #eeeeee;
+  cursor: pointer;
+}
+
+.numberSlider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #eeeeee;
+  cursor: pointer;
+}
+
+.genePart {
+  margin: 15px;
+}
+
+.geneSelect {
+  
 }

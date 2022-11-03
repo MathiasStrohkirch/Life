@@ -7,7 +7,7 @@
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <div>
+        <div class="leftSidebar">
             <p>Cycles</p>
             <input id="cycles" type="number" oninput="changeCycles(this.value)"/>
             <button type="button" onclick="decreaseCycles()" class="updown">-</button>
@@ -36,7 +36,15 @@
             <input id="inner" type="number" oninput="changeInner(this.value)"/>
             <button type="button" onclick="decreaseInner()" class="updown">-</button>
             <button type="button" onclick="increaseInner()" class="updown">+</button>
-            
+
+            <div class="switchRow">
+                <label class="switch">
+                    <input type="checkbox" id="allowOverlap">
+                    <span class="slider round"></span>
+                </label>
+                <p>Allow Overlap</p>
+            </div>
+                        
             <div class="column">
                 <button id="randomInput" class="nodeSelected" onclick="enableDisableInputNode(0)">Random Input</button>
                 <button id="positiveInput" class="nodeSelected" onclick="enableDisableInputNode(1)">Positive Input</button>
@@ -48,24 +56,45 @@
                 <button id="downOutput" class="nodeSelected" onclick="enableDisableOutputNode(3)">Down Output</button>
             </div>
 
+            <div id="goals">
+                <button id="addGoal" onclick="addGoal(Goals[1])"">Add Goal</button>
+            </div>
+            <div id="test" class="test">
+                <button id="testExpander" class="testExpander">Test</button>
+                <button type="button" onclick="runTest()">Run Test</button>
+            </div>
             </br>
             <button id="run" type="button" onclick="run()">Run</button>
             </br>
-            <p id="runProgress"></p>
         </div>
-        <canvas id="canvas" width="900" height="900" style="border:1px solid #eeeeee;" class="hiddenSameSize">
+        <canvas id="canvas" width="900" height="900" style="border:1px solid #eeeeee;">
         </canvas>
-        <div id="canvasControls" class="hiddenSameSize">
+        <div id="canvasControls">
             <p id="generationLabel">Generation</p>
-            <p id="generation"/>
+            <p id="generation">0</p>
             <p id="cycleLabel">Cycle </p>
-            <p id="cycle"/>
+            <p id="cycle">0</p>
             <p id="speedLabel">Speed </p>
             <input id="speed" type="number" min="0" step="1" oninput="changeSpeed(this.value)"/>
             <button type="button" onclick="decreaseSpeed()" class="updown">-</button>
             <button type="button" onclick="increaseSpeed()" class="updown">+</button>
             </br>
             <button id="playPause" type="button" onclick="playPause()">Play</button>
+            </br>
+            <div class="switchRow">
+                <label class="switch">
+                    <input type="checkbox" id="showGoals" onclick="showGoals()">
+                    <span class="slider round"></span>
+                </label>
+                <p>Show Goals</p>
+            </div>
+            <div class="switchRow">
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="slider round"></span>
+                </label>
+                <p>Show Mutations</p>
+            </div>
             </br>
             <canvas id="neuralNetworkCanvas" width="230" height="300" style="margin:0px; margin-top: 25px"/>
         </div>
