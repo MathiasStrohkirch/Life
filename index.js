@@ -92,7 +92,7 @@ class NegativeInput extends Input {
 
 class XInput extends Input {
   cycle() {
-    return this.entity.x / this.entity.x_bound;
+    return this.entity.x * 2 / this.entity.x_bound - 1;
   }
 }
 
@@ -705,6 +705,9 @@ class Entity {
 
         let connections = []
         for (const connection of neuron.output_connections) {
+          if (connection.weight === 0) {
+            continue;
+          }
           if (connectedNeurons.includes(connection.output_node)) {
             connections.push(connection)
           }
@@ -721,6 +724,9 @@ class Entity {
 
         let connections = []
         for (const connection of neuron.input_connections) {
+          if (connection.weight === 0) {
+            continue;
+          }
           if (connectedNeurons.includes(connection.input_node)) {
             connections.push(connection)
           }
@@ -729,6 +735,9 @@ class Entity {
 
         connections = []
         for (const connection of neuron.output_connections) {
+          if (connection.weight === 0) {
+            continue;
+          }
           if (connectedNeurons.includes(connection.output_node)) {
             connections.push(connection)
           }
@@ -745,6 +754,9 @@ class Entity {
 
         let connections = []
         for (const connection of neuron.input_connections) {
+          if (connection.weight === 0) {
+            continue;
+          }
           if (connectedNeurons.includes(connection.input_node)) {
             connections.push(connection)
           }
@@ -771,6 +783,9 @@ class Entity {
     }
     let subPath = []
     for (const connection of neuron.input_connections) {
+      if (connection.weight === 0) {
+        continue;
+      }
       let subchecked = [...checked]
       let nodes = this.removeDuplicatesAndDeadEndsRecursive(connection.input_node, subchecked)
       if (nodes !== null) {
@@ -1153,6 +1168,8 @@ function showGoals() {
 function enableDisableInputNode(index) {
   enabledInputNodes[index] = !enabledInputNodes[index];
 
+  setInputAndOutputNodes(); // todo: wait to do this until we do a new cycle (or something?) it crashes
+
   if (enabledInputNodes[index]) {
     document.getElementById(EnabledInputNodes[index]).className = 'nodeSelected';
   }
@@ -1163,6 +1180,8 @@ function enableDisableInputNode(index) {
 
 function enableDisableOutputNode(index) {
   enabledOutputNodes[index] = !enabledOutputNodes[index];
+
+  setInputAndOutputNodes();
 
   if (enabledOutputNodes[index]) {
     document.getElementById(EnabledOutputNodes[index]).className = 'nodeSelected';
