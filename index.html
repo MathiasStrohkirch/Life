@@ -8,22 +8,14 @@
     </head>
     <body>
         <div class="leftSidebar">
-            <p>Cycles</p>
-            <input id="cycles" type="number" oninput="changeCycles(this.value)"/>
-            <button type="button" onclick="decreaseCycles()" class="updown">-</button>
-            <button type="button" onclick="increaseCycles()" class="updown">+</button>
             <p>Entities</p>
             <input id="entities" type="number" oninput="changeEntities(this.value)"/>
             <button type="button" onclick="decreaseEntities()" class="updown">-</button>
             <button type="button" onclick="increaseEntities()" class="updown">+</button>
-            <p>Precision</p>
-            <input id="precision" type="number" oninput="changePrecision(this.value)"/>
-            <button type="button" onclick="decreasePrecision()" class="updown">-</button>
-            <button type="button" onclick="increasePrecision()" class="updown">+</button>
-            <p>Connections</p>
-            <input id="connections" type="number" oninput="changeConnections(this.value)"/>
-            <button type="button" onclick="decreaseConnections()" class="updown">-</button>
-            <button type="button" onclick="increaseConnections()" class="updown">+</button>
+            <p>Cycles</p>
+            <input id="cycles" type="number" oninput="changeCycles(this.value)"/>
+            <button type="button" onclick="decreaseCycles()" class="updown">-</button>
+            <button type="button" onclick="increaseCycles()" class="updown">+</button>
             <p>Mutation Probability</p>
             <input id="mutationProbability" type="number" oninput="changeMutationProbability(this.value)"/>
             <button type="button" onclick="decreaseMutationProbability()" class="updown">-</button>
@@ -32,11 +24,6 @@
             <input id="reactiveness" type="number" oninput="changeReactiveness(this.value)"/>
             <button type="button" onclick="decreaseReactiveness()" class="updown">-</button>
             <button type="button" onclick="increaseReactiveness()" class="updown">+</button>
-            <p>Inner Nodes</p>
-            <input id="inner" type="number" oninput="changeInner(this.value)"/>
-            <button type="button" onclick="decreaseInner()" class="updown">-</button>
-            <button type="button" onclick="increaseInner()" class="updown">+</button>
-
             <div class="switchRow">
                 <label class="switch">
                     <input type="checkbox" id="allowOverlap">
@@ -44,24 +31,47 @@
                 </label>
                 <p>Allow Overlap</p>
             </div>
-                        
-            <div class="column">
-                <button id="randomInput" class="nodeSelected" onclick="enableDisableInputNode(0)">Random Input</button>
-                <button id="positiveInput" class="nodeSelected" onclick="enableDisableInputNode(1)">Positive Input</button>
-                <button id="negativeInput" class="nodeSelected" onclick="enableDisableInputNode(2)">Negative Input</button>
-                <button id="xInput" class="nodeSelected" onclick="enableDisableInputNode(3)">X Input</button>
-                <button id="rightOutput" class="nodeSelected" onclick="enableDisableOutputNode(0)">Right Output</button>
-                <button id="upOutput" class="nodeSelected" onclick="enableDisableOutputNode(1)">Up Output</button>
-                <button id="leftOutput" class="nodeSelected" onclick="enableDisableOutputNode(2)">Left Output</button>
-                <button id="downOutput" class="nodeSelected" onclick="enableDisableOutputNode(3)">Down Output</button>
+            
+            <p>Connections</p>
+            <input id="connections" type="number" oninput="changeConnections(this.value)"/>
+            <button type="button" onclick="decreaseConnections()" class="updown">-</button>
+            <button type="button" onclick="increaseConnections()" class="updown">+</button>
+            <p>Precision</p>
+            <input id="precision" type="number" oninput="changePrecision(this.value)"/>
+            <button type="button" onclick="decreasePrecision()" class="updown">-</button>
+            <button type="button" onclick="increasePrecision()" class="updown">+</button>
+            <p>Inner Nodes</p>
+            <input id="inner" type="number" oninput="changeInner(this.value)"/>
+            <button type="button" onclick="decreaseInner()" class="updown">-</button>
+            <button type="button" onclick="increaseInner()" class="updown">+</button>
+                
+            <div id="neurons" class="test">
+                <button id="genomeExpander" class="genomeExpander" onclick="expandNeurons()">Neurons</button>
+                <div class="column">
+                    <button id="randomInput" class="nodeSelected" onclick="enableDisableInputNode(0)">Random Input</button>
+                    <button id="positiveInput" class="nodeSelected" onclick="enableDisableInputNode(1)">Positive Input</button>
+                    <button id="negativeInput" class="nodeSelected" onclick="enableDisableInputNode(2)">Negative Input</button>
+                    <button id="xInput" class="nodeSelected" onclick="enableDisableInputNode(3)">X Input</button>
+                    <button id="rightOutput" class="nodeSelected" onclick="enableDisableOutputNode(0)">Right Output</button>
+                    <button id="upOutput" class="nodeSelected" onclick="enableDisableOutputNode(1)">Up Output</button>
+                    <button id="leftOutput" class="nodeSelected" onclick="enableDisableOutputNode(2)">Left Output</button>
+                    <button id="downOutput" class="nodeSelected" onclick="enableDisableOutputNode(3)">Down Output</button>
+                </div>
             </div>
 
-            <div id="goals">
-                <button id="addGoal" onclick="addGoal(Goals[1])"">Add Goal</button>
+            <div id="goals" class="test">
+                <button id="genomeExpander" class="genomeExpander" onclick="expandGoals()">Goals</button>
+                <button id="addGoal" onclick="addGoal(Goals[1])" class="addGoal">Add Goal</button>
             </div>
             <div id="test" class="test">
-                <button id="testExpander" class="testExpander">Test</button>
-                <button type="button" onclick="runTest()">Run Test</button>
+                <button id="testExpander" class="testExpander" onclick="expandTest()">Test</button>
+                <div class="switchRow">
+                    <label class="switch">
+                        <input type="checkbox" id="testMode" onclick="toggleTestMode()">
+                        <span class="slider round"></span>
+                    </label>
+                    <p>Test Mode</p>
+                </div>
             </div>
             </br>
             <button id="run" type="button" onclick="run()">Run</button>
@@ -96,7 +106,9 @@
                 <p>Show Mutations</p>
             </div>
             </br>
-            <canvas id="neuralNetworkCanvas" width="230" height="300" style="margin:0px; margin-top: 25px"/>
+            <canvas id="neuralNetworkCanvas" width="230" height="300" style="margin:0px; margin-top: 25px"></canvas>
+            </br>
+            <button type="button" onclick="copyToTest()">Copy to Test</button>
         </div>
     </body>
 </html>

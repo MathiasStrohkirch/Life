@@ -9,6 +9,8 @@ body {
   margin-top: 10px;
   display: flex;
   flex-direction: row;
+  margin-left: 10px;
+  margin-bottom: 10px;
 }
 
 ::-webkit-scrollbar {
@@ -50,13 +52,15 @@ p {
 }
 
 button.node {
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 button.nodeSelected {
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
   background-color: #eeeeee;
   color: #333333;
 }
@@ -107,6 +111,20 @@ button.updown {
   height: 25px;
 }
 
+input.warning {
+  border-color: #b3bde6;
+  color: #b3bde6;
+}
+
+p.warning {
+  color: #b3bde6;
+}
+
+button.warning {
+  border-color: #b3bde6;
+  color: #b3bde6;
+}
+
 canvas {
   margin-left: 50px;
   margin-right: 50px;
@@ -117,8 +135,14 @@ canvas {
   border-radius: 15px;
   padding: 10px;
   position: sticky;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.addGoal {
+  margin-bottom: 10px;
+  margin-left: 10px;
 }
 
 .option {
@@ -194,7 +218,7 @@ canvas {
   height: 42px;
 }
 
-.small {
+input.small {
   width: 50px;
 }
 
@@ -270,26 +294,48 @@ input:checked ~ .slider::before {
   border: 1px solid #eeeeee;
   border-radius: 15px;
   position: sticky;
-  margin: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .test {
   border: 1px solid #eeeeee;
   border-radius: 15px;
+  overflow: hidden;
+  height: 29px;
+  animation-name: collapse;
+  animation-duration: .5s;
 }
 
 .testExpander {
-  border: none;
-  border-radius: 0;
   width: 100%;
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
   padding-top: 5px;
   padding-bottom: 5px;
   text-align: left;
+  border: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .testExpander:hover {
+  background-color: #eeeeee;
+  color: #333333;
+}
+
+.genomeExpander {
+  width: 100%;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+  text-align: left;
+  border: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.genomeExpander:hover {
   background-color: #eeeeee;
   color: #333333;
 }
@@ -325,9 +371,42 @@ input:checked ~ .slider::before {
 }
 
 .genePart {
-  margin: 15px;
+
 }
 
 .geneSelect {
   
+}
+
+@keyframes expand {
+  0% {
+    height: 30px;
+  }
+
+  100% {
+    height: var(--height);
+  }
+}
+
+@keyframes collapse {
+  0% {
+    height: var(--height);
+  }
+
+  100% {
+    height: 30px;
+  }
+}
+
+.expanded {
+  animation-name: expand;
+  animation-duration: .5s;
+  height: auto;
+  border: 1px solid #eeeeee;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.testPadding {
+  padding: 10px;
 }
