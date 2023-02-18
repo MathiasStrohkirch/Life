@@ -1,24 +1,21 @@
 // gene connections start with inner neurons so the beginning and end are the same. Ex: 010 for beginning and 0010 for end are the same neuron if there are at least 010 inner neurons
 
 // todo:
-// enabling/disabling a node doesn't remove it from test selector (good?)
-// changing inner nodes should only remove it from test selector when not running test? maybe? idk
 // have variables instead of always using getBitsRequired
 // have functions to replace inputTrait, outputTrait, weight rather than having to substring
 // input field limits and validation
-// make dropdowns for node enablers, goals, and tests
 // show mutations slider
 // hide select dropdown on select
 // add more goals - minimize connections? distance from others? distance traveled?
 // add more nodes - kill?
 // show percent success?
 // non-binary goals - goal weights
-// highlight selected entity?
+// highlight selected entity? - sometimes doesn't work
 // make input nodes connect to each other in neural network diagram
 // make connections not overlap completely? be able to move neural network nodes around?
-// figure out how to get a value if neuron is ouputting 0. Inverter that takes 0-1 to 1-0? X input doesn't really work. Need a bias for each node?
 // what happens when all input or output nodes are disabled?
-// switch up and down
+// switch up and down nodes
+// positive input node acts like a bias, but should still add an inherent bias
 
 // crashes: change entities to 1. increase entities while playing
 
@@ -94,7 +91,7 @@ class NegativeInput extends Input {
 
 class XInput extends Input {
   cycle() {
-    return this.entity.x * 2 / this.entity.x_bound - 1;
+    return this.entity.x / this.entity.x_bound;
   }
 }
 
@@ -298,6 +295,7 @@ class Entity {
   constructor(isTest) {
     this.isTest = isTest;
     this.genome = []
+    this.biases = []
     this.input_neurons = []
     this.inner_neurons = []
     this.output_neurons = []
@@ -796,8 +794,6 @@ class Entity {
     let inner_neuron_offset = (maxLength - this.inner_neurons.length) * 40
     let output_neuron_offset = (maxLength - this.output_neurons.length) * 40
     
-    let count = 0;
-
     for (let i = 0; i < this.input_neurons.length; i++) {
       neurons.push({type: 'neuron', parameters: [25, i * 80 + 25 + input_neuron_offset, NodeAbbreviations[this.input_neurons[i].constructor.name]]})
       for (const connection of this.input_neurons[i].output_connections) {
@@ -805,7 +801,6 @@ class Entity {
           for (let j = 0; j < this.inner_neurons.length; j++) {
             if (connection.output_node == this.inner_neurons[j]) {
                connections.push({type: 'connection', parameters: [25, i * 80 + 25 + input_neuron_offset, 115, j * 80 + 25 + inner_neuron_offset, connection.weight / Math.pow(2, precision - 1)]})
-              count++;
             }
           }
         }
@@ -813,7 +808,6 @@ class Entity {
           for (let j = 0; j < this.output_neurons.length; j++) {
             if (connection.output_node == this.output_neurons[j]) {
               connections.push({type: 'connection', parameters: [25, i * 80 + 25 + input_neuron_offset, 205, j * 80 + 25 + output_neuron_offset, connection.weight / Math.pow(2, precision - 1)]})
-              count++;
             }
           }
         }
@@ -826,7 +820,6 @@ class Entity {
         for (let j = 0; j < this.output_neurons.length; j++) {
           if (connection.output_node == this.output_neurons[j]) {
             connections.push({type: 'connection', parameters: [115, i * 80 + 25 + inner_neuron_offset, 205, j * 80 + 25 + output_neuron_offset, connection.weight / Math.pow(2, precision - 1)]})
-            count++;
           }
         }
       }
@@ -1012,10 +1005,6 @@ function genomeNumberToString(number, length) {
   return string;
 }
 
-function genomeReplaceInputTrait(genome, inputTrait) {
-  
-}
-
 function drawEntity(x, y, color) {
   if (color) {
     context.fillStyle = color;
@@ -1067,19 +1056,59 @@ function changeEntities(value) {
 }
 
 function changePrecision(value) {
-  if (value < 0) {
+  value = parseInt(value)
+
+  if (isNaN(value) || value < 0) {
     return
   }
+
+  let oldPrecision = precision
   
   precision = value;
+
+  setInputAndOutputNodes()
+
+  // todo: change this to using new function to generate brain and also do for test entity
+  for (const entity of entities) {
+    updatePrecision(entity, oldPrecision)
+
+    entity.generate_brain()
+  }
 }
 
 function changeConnections(value) {
-  if (value < 0) {
+  value = parseInt(value)
+
+  if (isNaN(value) || value < 0) {
     return
   }
+
+  let oldConnections = connections
   
   connections = value;
+
+  if (oldConnections < connections) {
+    for (const entity of entities) {
+      for (let i = 0; i < connections - oldConnections; i++) {
+        let newGene = getRandomGene()
+
+        entity.genome.push(newGene)
+      }
+
+      entity.generate_brain()
+    }
+  }
+  else {
+    for (const entity of entities) {
+      for (let i = 0; i < oldConnections - connections; i++) {
+        let removedConnection = Math.floor(Math.random() * connections)
+
+        entity.genome.splice(removedConnection, 1)
+      }
+
+      entity.generate_brain()
+    }
+  }
 }
 
 function changeMutationProbability(value) {
@@ -1098,12 +1127,81 @@ function changeReactiveness(value) {
   reactiveness = value;
 }
 
-function changeInner(value) {
-  if (value < 0) {
+function setInner(value) {
+  value = parseInt(value)
+
+  if (isNaN(value) || value < 0) {
     return
   }
 
-  inner_count = value;
+  changeInner(undefined, value)
+}
+
+function changeInner(delta, newInnerCount) {
+  if (delta === undefined) {
+    delta = newInnerCount - inner_count
+  }
+  else {
+    newInnerCount = inner_count + delta
+
+    if (newInnerCount < 0) {
+      return
+    }
+
+    document.getElementById('inner').value = newInnerCount;
+  }
+
+  const oldInnerCount = inner_count
+
+  inner_count = newInnerCount
+
+  setInputAndOutputNodes()
+
+  if (entities) {
+    for (const entity of entities) {
+      updateEntityFromInnerChange(entity, delta)
+    }
+  }
+
+  if (testEntity) {
+    updateEntityFromInnerChange(testEntity, delta)
+  }
+
+  generateBrainsAndDrawNeuralNetwork()
+
+  updateTestInputSelectors(delta > 0, inner_count, oldInnerCount, Object.keys(InputNodeClasses).length + inner_count - 1)
+  updateTestOutputSelectors(delta > 0, inner_count, oldInnerCount, Object.keys(OutputNodeClasses).length + inner_count - 1)
+}
+
+function generateBrainsAndDrawNeuralNetwork() {
+  if (document.getElementById('testMode').checked) {
+    if (!testEntity) {
+      return
+    }
+
+    testEntity.generate_brain()
+
+    let [data, genome] = testEntity.getNeuralNetworkData()
+    drawnNeuralNetworkGenome = genome
+    drawNeuralNetwork(data)
+  }
+  else {
+    if (!entities) {
+      return
+    }
+
+    for (const entity of entities) {
+      entity.generate_brain()
+    }
+
+    if (!selectedEntity) {
+      return
+    }
+
+    let [data, genome] = selectedEntity.getNeuralNetworkData()
+    drawnNeuralNetworkGenome = genome
+    drawNeuralNetwork(data)
+  }
 }
 
 function decreaseCycles() {
@@ -1138,14 +1236,8 @@ function decreasePrecision() {
 
     setInputAndOutputNodes()
 
-    for(const entity of entities) {
+    for (const entity of entities) {
       updatePrecision(entity, oldPrecision)
-
-      for (const gene of entity.genome) {
-        testValidateGene(gene)
-      }
-
-      entity.generate_brain()
     }
   }
 }
@@ -1157,7 +1249,7 @@ function increasePrecision() {
 
   setInputAndOutputNodes()
 
-  for(const entity of entities) {
+  for (const entity of entities) {
     updatePrecision(entity, oldPrecision)
 
     entity.generate_brain()
@@ -1169,13 +1261,21 @@ function decreaseConnections() {
     connections--;
     document.getElementById('connections').value = connections;
 
-    for (const entity of entities) {
+    if (entities) {
+      for (const entity of entities) {
+        let removedConnection = Math.floor(Math.random() * connections)
+
+        entity.genome.splice(removedConnection, 1)
+      }
+    }
+
+    if (testEntity) {
       let removedConnection = Math.floor(Math.random() * connections)
 
-      entity.genome.splice(removedConnection, 1)
-
-      entity.generate_brain()
+      testEntity.genome.splice(removedConnection, 1)
     }
+
+    generateBrainsAndDrawNeuralNetwork()
   }
 }
 
@@ -1183,14 +1283,21 @@ function increaseConnections() {
   connections++;
   document.getElementById('connections').value = connections;
 
-  for (const entity of entities) {
-    let newGene = getRandomGene()
+  if (entities) {
+    for (const entity of entities) {
+      let newGene = getRandomGene()
 
-    entity.genome.push(newGene)
-
-    entity.generate_brain()
+      entity.genome.push(newGene)
+    }
   }
 
+  if (testEntity) {
+    let newGene = getRandomGene()
+
+    testEntity.genome.push(newGene)
+  }
+
+  generateBrainsAndDrawNeuralNetwork()
 }
 
 function decreaseMutationProbability() {
@@ -1223,138 +1330,152 @@ function increaseReactiveness() {
   document.getElementById('reactiveness').value = reactiveness;
 }
 
-function decreaseInner() {
-  if (inner_count >= 1) {
-    let oldInputTraitLength = get_bits_required(input_count + inner_count)
-    let oldOutputTraitLength = get_bits_required(output_count + inner_count)
-    let oldGeneLength = gene_length
+function updateEntityFromInputChange(entity, isAdd, index) {
+  let newGenome = []
 
-    inner_count--;
-    document.getElementById('inner').value = inner_count;
+  let oldInputTraitLength = get_bits_required(input_count + inner_count - (isAdd ? 1 : -1))
+  let oldGeneLength = oldInputTraitLength + outputTraitLength + precision
 
-    setInputAndOutputNodes()
+  for (const gene of entity.genome) {
+    let oldInputTrait = getInputTrait(gene, true, oldInputTraitLength, oldGeneLength)
 
-    let removedTrait = inner_count
+    let newInputTrait
 
-    if (entities) {
-      for (const entity of entities) {
-        let newGenome = []
-        for (const gene of entity.genome) {
-          let oldInputTrait = getInputTrait(gene, true, oldInputTraitLength, oldGeneLength)
-          let newInputTrait
-
-          if (oldInputTrait === removedTrait) { // if we removed this gene's input trait, give it a random one
-            newInputTrait = getRandomInputTrait(true)
-          }
-          else if (oldInputTrait > removedTrait) { // if this gene's input trait is greater than the removed one, decrease it by 1 to keep it the same trait
-            newInputTrait = genomeNumberToString(getInputTrait(gene, true, oldInputTraitLength, oldGeneLength) - 1, inputTraitLength)
-          }
-          else {
-            newInputTrait = getInputTrait(gene, false, oldInputTraitLength, oldGeneLength)
-          }
-
-          let oldOutputTrait = getOutputTrait(gene, true, oldInputTraitLength, oldOutputTraitLength, oldGeneLength)
-          let newOutputTrait
-
-          if (oldOutputTrait === removedTrait) { // if we removed this gene's output trait, give it a random one
-            newOutputTrait = getRandomOutputTrait(true)
-          }
-          else if (oldOutputTrait > removedTrait) { // if this gene's output trait is greater than the removed one, decrease it by 1 to keep it the same trait
-            newOutputTrait = genomeNumberToString(getOutputTrait(gene, true, oldInputTraitLength, oldOutputTraitLength, oldGeneLength) - 1, outputTraitLength)
-          }
-          else { // need to do more here for output but not input because input will auto-correct because it's at the beginning of the gene, but output isn't
-            newOutputTrait = genomeNumberToString(getOutputTrait(gene, true, oldInputTraitLength, oldOutputTraitLength, oldGeneLength), outputTraitLength)
-          }
-
-          let newGene = genomeStringToNumber(newInputTrait + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
-          newGenome.push(newGene)
-
-          testValidateGene(newGene)
-        }
-        entity.genome = newGenome
-        entity.generate_brain()
+    if (isAdd) {
+      if (oldInputTrait < index) {
+        newInputTrait = genomeNumberToString(oldInputTrait, inputTraitLength)
+      }
+      else {
+        newInputTrait = genomeNumberToString(oldInputTrait + 1, inputTraitLength)
       }
     }
-  }
-}
-
-function testValidateGene(gene) {
-  if (typeof(gene) != 'number') {
-    throw new Error('gene is not number: ' + gene)
-  }
-
-  let geneString = genomeNumberToString(gene, gene_length)
-  let inputTrait = getInputTrait(gene, true)
-  let outputTrait = getOutputTrait(gene, true)
-  let precisionTrait = getPrecisionTrait(gene, true)
-
-  if (inputTrait >= input_count + inner_count) {
-    throw new Error('input trait too large: ' + geneString)
-  }
-  if (outputTrait >= output_count + inner_count) {
-    throw new Error('output trait too large: ' + geneString)
-  }
-  if (precisionTrait >= Math.pow(2, precision) - 1) {
-    throw new Error('precision trait too large: ' + geneString + ' ' + precisionTrait)
-  }
-  if (inputTrait < 0) {
-    throw new Error('input trait negative: ' + geneString)
-  }
-  if (outputTrait < 0) {
-    throw new Error('output trait negative: ' + geneString)
-  }
-  if (precisionTrait < 0) {
-    throw new Error('precision trait negative: ' + geneString)
-  }
-}
-
-function increaseInner() {
-  let oldInnerCount = inner_count
-
-  let oldInputTraitLength = get_bits_required(input_count + inner_count)
-  let oldOutputTraitLength = get_bits_required(output_count + inner_count)
-  let oldGeneLength = gene_length
-
-  inner_count++;
-  document.getElementById('inner').value = inner_count;
-
-  setInputAndOutputNodes()
-
-  let addedTrait = oldInnerCount
-
-  if (entities) {
-    for (const entity of entities) {
-      let newGenome = []
-      for (const gene of entity.genome) {
-        let oldInputTrait = getInputTrait(gene, true, oldInputTraitLength, oldGeneLength)
-        let newInputTrait
-
-        if (oldInputTrait >= addedTrait) {
-          newInputTrait = genomeNumberToString(getInputTrait(gene, true, oldInputTraitLength, oldGeneLength) + 1, inputTraitLength)
-        }
-        else {
-          newInputTrait = genomeNumberToString(getInputTrait(gene, true, oldInputTraitLength, oldGeneLength), inputTraitLength)
-        }
-
-        let oldOutputTrait = getOutputTrait(gene, true, oldInputTraitLength, oldOutputTraitLength, oldGeneLength)
-        let newOutputTrait
-
-        if (oldOutputTrait >= addedTrait) {
-          newOutputTrait = genomeNumberToString(getOutputTrait(gene, true, oldInputTraitLength, oldOutputTraitLength, oldGeneLength) + 1, outputTraitLength)
-        }
-        else {
-          newOutputTrait = genomeNumberToString(getOutputTrait(gene, false, oldInputTraitLength, oldOutputTraitLength, oldGeneLength), outputTraitLength)
-        }
-
-        let newGene = genomeStringToNumber(newInputTrait + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
-        newGenome.push(newGene)
-
-        testValidateGene(newGene)
+    else {
+      if (oldInputTrait < index) {
+        newInputTrait = genomeNumberToString(oldInputTrait, inputTraitLength)
       }
-      entity.genome = newGenome
-      entity.generate_brain()
+      else if (oldInputTrait === index) {
+        newInputTrait = getRandomInputTrait(true)
+      }
+      else {
+        newInputTrait = genomeNumberToString(oldInputTrait - 1, inputTraitLength)
+      }
     }
+
+    let newGene = genomeStringToNumber(newInputTrait + getOutputTrait(gene, false, oldInputTraitLength, undefined, oldGeneLength) + getPrecisionTrait(gene, false, oldGeneLength))
+
+    testValidateGene(newGene)
+
+    newGenome.push(newGene)
   }
+
+  entity.genome = newGenome
+}
+
+function updateEntityFromOutputChange(entity, isAdd, index) {
+  let newGenome = []
+
+  let oldOutputTraitLength = get_bits_required(output_count + inner_count - (isAdd ? 1 : -1))
+  let oldGeneLength = inputTraitLength + oldOutputTraitLength + precision
+
+  for (const gene of entity.genome) {
+    let oldOutputTrait = getOutputTrait(gene, true, undefined, oldOutputTraitLength, oldGeneLength)
+
+    let newOutputTrait
+
+    if (isAdd) {
+      if (oldOutputTrait < index) {
+        newOutputTrait = genomeNumberToString(oldOutputTrait, outputTraitLength)
+      }
+      else {
+        newOutputTrait = genomeNumberToString(oldOutputTrait + 1, outputTraitLength)
+      }
+    }
+    else {
+      if (oldOutputTrait < index) {
+        newOutputTrait = genomeNumberToString(oldOutputTrait, outputTraitLength)
+      }
+      else if (oldOutputTrait === index) {
+        newOutputTrait = getRandomOutputTrait(true)
+      }
+      else {
+        newOutputTrait = genomeNumberToString(getOutputTrait(oldOutputTrait - 1, outputTraitLength))
+      }
+    }
+
+    let newGene = genomeStringToNumber(getInputTrait(gene, false, undefined, oldGeneLength) + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
+
+    testValidateGene(newGene)
+
+    newGenome.push(newGene)
+  }
+
+  entity.genome = newGenome
+}
+
+function updateEntityFromInnerChange(entity, difference) {
+  if (difference === 0) {
+    throw new Error('Difference is 0')
+  }
+
+  let newGenome = []
+
+  for (const gene of entity.genome) {
+    let oldInputTraitLength = get_bits_required(input_count + inner_count - difference)
+    let oldOutputTraitLength = get_bits_required(output_count + inner_count - difference)
+    let oldInnerCount = inner_count - difference
+    let oldGeneLength = oldInputTraitLength + oldOutputTraitLength + precision
+
+    let oldInputTrait = getInputTrait(gene, true, oldInputTraitLength, oldGeneLength)
+    let oldOutputTrait = getOutputTrait(gene, true, oldInputTraitLength, oldOutputTraitLength, oldGeneLength)
+
+    let newInputTrait
+    let newOutputTrait
+
+    if (difference < 0) { // if we removed one or more inner nodes
+      if (oldInputTrait < inner_count) { // if the trait is less than all removed traits
+        newInputTrait = genomeNumberToString(oldInputTrait, inputTraitLength)
+      }
+      else if (oldInputTrait >= oldInnerCount) {
+        newInputTrait = genomeNumberToString(oldInputTrait + difference, inputTraitLength)
+      }
+      else {
+        newInputTrait = getRandomInputTrait(true)
+      }
+
+      if (oldOutputTrait < inner_count) { // if the trait is less than all removed traits
+        newOutputTrait = genomeNumberToString(oldOutputTrait, outputTraitLength)
+      }
+      else if (oldOutputTrait >= oldInnerCount) {
+        newOutputTrait = genomeNumberToString(oldOutputTrait + difference, outputTraitLength)
+      }
+      else {
+        newOutputTrait = getRandomOutputTrait(true)
+      }
+    }
+    else {
+      if (oldInputTrait < oldInnerCount) {
+        newInputTrait = genomeNumberToString(oldInputTrait, inputTraitLength)
+      }
+      else {
+        newInputTrait = genomeNumberToString(oldInputTrait + difference, inputTraitLength)
+      }
+
+      if (oldOutputTrait < oldInnerCount) {
+        newOutputTrait = genomeNumberToString(oldOutputTrait, outputTraitLength)
+      }
+      else {
+        newOutputTrait = genomeNumberToString(oldOutputTrait + difference, outputTraitLength)
+      }
+    }
+
+    let newGene = genomeStringToNumber(newInputTrait + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
+
+    testValidateGene(newGene)
+
+    newGenome.push(newGene)
+  }
+
+  entity.genome = newGenome
 }
 
 function decreaseSpeed() {
@@ -1398,182 +1519,89 @@ function showGoals() {
 function enableDisableInputNode(index) {
   enabledInputNodes[index] = !enabledInputNodes[index]; // todo: do we need enabledInputNodes? can we just use the dom element state?
 
-  let oldInputTraitLength = get_bits_required(input_count + inner_count)
-  let oldGeneLength = gene_length
-
   setInputAndOutputNodes();
+
+  let traitIndex = inner_count
+
+  for (let i = 0; i < index; i++) {
+    if (enabledInputNodes[i]) {
+      traitIndex++
+    }
+  }
+
+  let isAdd
 
   if (enabledInputNodes[index]) {
     document.getElementById(EnabledInputNodes[index]).className = 'nodeSelected';
 
-    let addedTrait = inner_count
-
-    for (let i = 0; i < index; i++) {
-      if (enabledInputNodes[i]) {
-        addedTrait++
-      }
-    }
-
-    if (entities) {
-      for (const entity of entities) {
-        let newGenome = []
-        for (const gene of entity.genome) {
-          let oldInputTrait = getInputTrait(gene, true, oldInputTraitLength, oldGeneLength)
-
-          if (oldInputTrait >= addedTrait) {
-            let newInputTrait = genomeNumberToString(getInputTrait(gene, true, oldInputTraitLength, oldGeneLength) + 1, get_bits_required(input_count + inner_count))
-            let newGene = genomeStringToNumber(newInputTrait + getOutputAndPrecisionTraits(gene, false, oldGeneLength, oldInputTraitLength))
-            newGenome.push(newGene)
-          }
-          else {
-            newGenome.push(gene)
-          }
-        }
-        entity.genome = newGenome
-        entity.generate_brain()
-      }
-    }
+    isAdd = true
   }
   else {
     document.getElementById(EnabledInputNodes[index]).className = 'node';
 
-    let removedTrait = inner_count
+    isAdd = false
+  }
 
-    for (let i = 0; i < index; i++) {
-      if (enabledInputNodes[i]) {
-        removedTrait++
-      }
-    }
-
-    if (entities) {
-      for (const entity of entities) {
-        let newGenome = []
-        for (const gene of entity.genome) {
-          let oldInputTrait = getInputTrait(gene, true, oldInputTraitLength, oldGeneLength)
-
-          let newGene
-          let newInputTrait
-
-          if (oldInputTrait === removedTrait) { // if we removed this gene's input trait, give it a random one
-            newInputTrait = getRandomInputTrait(true)
-            newGene = genomeStringToNumber(newInputTrait + getOutputAndPrecisionTraits(gene, false, oldGeneLength, oldInputTraitLength))
-            newGenome.push(newGene)
-          }
-          else if (oldInputTrait > removedTrait) { // if this gene's input trait is greater than the removed one, decrease it by 1 to keep it the same trait
-            newInputTrait = genomeNumberToString(getInputTrait(gene, true, oldInputTraitLength, oldGeneLength) - 1, inputTraitLength)
-            newGene = genomeStringToNumber(newInputTrait + getOutputAndPrecisionTraits(gene, false, oldGeneLength, oldInputTraitLength))
-            newGenome.push(newGene)
-          }
-          else {
-            newGenome.push(gene)
-          }
-
-          testValidateGene(newGene ?? gene)
-        }
-        entity.genome = newGenome
-        entity.generate_brain()
-      }
+  if (entities) {
+    for (const entity of entities) {
+      updateEntityFromInputChange(entity, isAdd, traitIndex)
     }
   }
+
+  if (testEntity) {
+    updateEntityFromInputChange(testEntity, isAdd, traitIndex)
+  }
+
+  generateBrainsAndDrawNeuralNetwork()
+
+  updateTestInputSelectors(isAdd, traitIndex, undefined, index)
 }
 
 function enableDisableOutputNode(index) {
   enabledOutputNodes[index] = !enabledOutputNodes[index];
 
-  let oldOutputTraitLength = get_bits_required(output_count + inner_count)
-  let oldGeneLength = gene_length
-
   setInputAndOutputNodes(); // todo: split and change to only setting input or output for performance
+
+  let traitIndex = inner_count
+
+  for (let i = 0; i < index; i++) {
+    if (enabledOutputNodes[i]) {
+      traitIndex++
+    }
+  }
+
+  let isAdd
 
   if (enabledOutputNodes[index]) {
     document.getElementById(EnabledOutputNodes[index]).className = 'nodeSelected';
 
-    let addedTrait = inner_count
-
-    for (let i = 0; i < index; i++) {
-      if (enabledOutputNodes[i]) {
-        addedTrait++
-      }
-    }
-
-    if (entities) {
-      for (const entity of entities) {
-        let newGenome = []
-        for (const gene of entity.genome) {
-          let oldOutputTrait = getOutputTrait(gene, true, undefined, oldOutputTraitLength, oldGeneLength)
-
-          let newOutputTrait
-          let newGene
-
-          if (oldOutputTrait >= addedTrait) {
-            newOutputTrait = genomeNumberToString(getOutputTrait(gene, true, undefined, oldOutputTraitLength, oldGeneLength) + 1, outputTraitLength)
-            newGene = genomeStringToNumber(getInputTrait(gene, false, undefined, oldGeneLength) + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
-            newGenome.push(newGene)
-          }
-          else {
-            newOutputTrait = genomeNumberToString(getOutputTrait(gene, true, undefined, oldOutputTraitLength, oldGeneLength), outputTraitLength)
-            newGene = genomeStringToNumber(getInputTrait(gene, false, undefined, oldGeneLength) + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
-            newGenome.push(newGene)
-          }
-        }
-        entity.genome = newGenome
-        entity.generate_brain()
-      }
-    }
+    isAdd = true
   }
   else {
     document.getElementById(EnabledOutputNodes[index]).className = 'node';
 
-    let removedTrait = inner_count
+    isAdd = false
+  }
 
-    for (let i = 0; i < index; i++) {
-      if (enabledOutputNodes[i]) {
-        removedTrait++
-      }
-    }
-
-    if (entities) {
-      for (const entity of entities) {
-        let newGenome = []
-        for (const gene of entity.genome) {
-          let oldOutptTrait = getOutputTrait(gene, true, undefined, oldOutputTraitLength, oldGeneLength)
-
-          let newGene
-          let newOutputTrait
-
-          if (oldOutptTrait === removedTrait) { // if we removed this gene's output trait, give it a random one
-            newOutputTrait = getRandomOutputTrait(true)
-            newGene = genomeStringToNumber(getInputTrait(gene, false, undefined, oldGeneLength) + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
-            newGenome.push(newGene)
-          }
-          else if (oldOutptTrait > removedTrait) { // if this gene's output trait is greater than the removed one, decrease it by 1 to keep it the same trait
-            newOutputTrait = genomeNumberToString(getOutputTrait(gene, true, undefined, oldOutputTraitLength, oldGeneLength) - 1, outputTraitLength)
-            newGene = genomeStringToNumber(getInputTrait(gene, false, undefined, oldGeneLength) + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
-            newGenome.push(newGene)
-          }
-          else { // need to do more here for output but not input because input will auto-correct because it's at the beginning of the gene, but output isn't
-            newOutputTrait = genomeNumberToString(getOutputTrait(gene, true, undefined, oldOutputTraitLength, oldGeneLength), outputTraitLength)
-            newGene = genomeStringToNumber(getInputTrait(gene, false, undefined, oldGeneLength) + newOutputTrait + getPrecisionTrait(gene, false, oldGeneLength))
-            newGenome.push(newGene)
-          }
-
-          testValidateGene(newGene)
-        }
-        entity.genome = newGenome
-        entity.generate_brain()
-      }
+  if (entities) {
+    for (const entity of entities) {
+      updateEntityFromOutputChange(entity, isAdd, traitIndex)
     }
   }
+
+  if (testEntity) {
+    updateEntityFromOutputChange(testEntity, isAdd, traitIndex)
+  }
+
+  generateBrainsAndDrawNeuralNetwork()
+
+  updateTestOutputSelectors(isAdd, traitIndex, undefined, index)
 }
 
 function run() {
   document.getElementById('run').className = ''
   document.getElementById('canvas').className = ''
   document.getElementById('canvasControls').className = ''
-
-  // updateTestPrecision(oldPrecision);
-  // updateTestInnerCount(oldInnerCount)
-  // setInputAndOutputNodes();
 
   entities = []
   resetSpaces();
@@ -1923,45 +1951,51 @@ function addTestGene(index) {
   let options = []
   let callbacks = []
 
-  for (let i = 0; i < Object.values(EnabledInputNodes).length; i++) {
-    options.push(Object.values(EnabledInputNodes)[i])
-    callbacks.push(() => updateTestGenome(index, selectorNeuronToGenomeIndex(i, input_count)))
+  for (const inputNode of Object.entries(InputNodeClasses)) {
+    options.push(inputNode[1].name)
+    callbacks.push(() => updateTestGenome(index, inputNode[0]))
   }
 
-  let [select, space] = createSelect(options, callbacks)
+  options.push('Inner 0')
+  let temp = input_count
+  callbacks.push(() => updateTestGenome(index, temp))
 
-  inputSelectors.push(select)
+  let [fromSelect, fromSpace] = createSelect(options, callbacks)
+
+  inputSelectors.push(fromSelect)
 
   let div = document.createElement('div')
 
   div.appendChild(from)
-  div.appendChild(select)
-  div.appendChild(space)
+  div.appendChild(fromSelect)
+  div.appendChild(fromSpace)
 
   gene.appendChild(div)
 
   let to = document.createElement('p')
   to.textContent = 'To'
 
-  gene.appendChild(to)
-
   options = []
   callbacks = []
 
-  for (let i = 0; i < Object.values(EnabledOutputNodes).length; i++) {
-    options.push(Object.values(EnabledOutputNodes)[i])
-    callbacks.push(() => updateTestGenome(index, undefined, selectorNeuronToGenomeIndex(i, output_count)))
+  for (const outputNode of Object.entries(OutputNodeClasses)) {
+    options.push(outputNode[1].name)
+    callbacks.push(() => updateTestGenome(index, undefined, outputNode[0]))
   }
 
-  [select, space] = createSelect(options, callbacks)
+  options.push('Inner 0')
+  temp = output_count
+  callbacks.push(() => updateTestGenome(index, undefined, temp))
 
-  outputSelectors.push(select)
+  let [toSelect, toSpace] = createSelect(options, callbacks)
+
+  outputSelectors.push(toSelect)
 
   div = document.createElement('div')
 
   div.appendChild(to)
-  div.appendChild(select)
-  div.appendChild(space)
+  div.appendChild(toSelect)
+  div.appendChild(toSpace)
 
   gene.appendChild(div)
 
@@ -2006,12 +2040,15 @@ function selectorNeuronToGenomeIndex(i, otherCount) {
   }
 }
 
-function genomeNeuronToSelectorIndex(i, otherCount) {
-  if (i < inner_count) {
+function genomeNeuronToSelectorIndex(i, otherCount, relevantInnerCount) {
+  if (relevantInnerCount === undefined) {
+    relevantInnerCount = inner_count
+  }
+  if (i < relevantInnerCount) {
     return i + otherCount;
   }
   else {
-    return i - inner_count;
+    return i - relevantInnerCount;
   }
 }
 
@@ -2026,10 +2063,12 @@ function updateTestGenome(index, from, to, weight) {
   let gene = genomeNumberToString(testEntity.genome[index], gene_length);
 
   if (from !== undefined) {
+    from = inputNodeClassToGenomeIndex(from)
     gene = genomeNumberToString(from, get_bits_required(input_count + inner_count)) + gene.substring(get_bits_required(input_count + inner_count))
   }
 
   if (to !== undefined) {
+    to = outputNodeClassToGenomeIndex(to)
     gene = gene.substring(0, get_bits_required(input_count + inner_count)) + genomeNumberToString(to, get_bits_required(output_count + inner_count)) + gene.substring(gene_length - precision)
   }
 
@@ -2049,177 +2088,34 @@ function updateTestGenome(index, from, to, weight) {
   }
 }
 
-/** 
- * If resizing to be longer, any re-calculation of the trait must be done after this is called
- * If resizing to be shorter, re-calculation must be done before this (will chop off the leading x characters where x is the size difference)
-*/
-function getResizedTrait(trait, newLength) {
-  if (newLength > trait.length) {
-    let leadingZeroes = ''
+function inputNodeClassToGenomeIndex(inputNodeClass) {
+  if (inputNodeClass >= Object.keys(InputNodeClasses).length) { // inputNodeClass is an inner Node
+    return inputNodeClass - Object.keys(InputNodeClasses).length
+  }
 
-    for (let j = 0; j < newLength - trait.length; j++) {
-      leadingZeroes = leadingZeroes + '0'
+  let genomeIndex = 0
+
+  for (let i = 0; i < inputNodeClass; i++) {
+    if (enabledInputNodes[i]) {
+      genomeIndex++
     }
-    
-    return leadingZeroes + trait
   }
-  else if (newLength < trait.length) {
-    return trait.substring(trait.length - newLength)
-  }
-  else {
-    throw new Error('Tried to resize trait with same size')
-  }
+  return genomeIndex + inner_count
 }
 
-function updateTestInnerCount(oldCount) {
-  let oldGeneLength = get_bits_required(input_count + oldCount) + get_bits_required(output_count + oldCount) + precision
-
-  let tempGeneLength = oldGeneLength
-
-  let tempInnerCount = oldCount
-
-  if (oldCount < inner_count) {
-    if (get_bits_required(input_count + oldCount) !== get_bits_required(input_count + inner_count)) { // input trait length increased  
-      for (let i = 0; i < connections; i++) {
-        let resizedInputTrait = ''
-
-        for (let j = 0; j < get_bits_required(input_count + inner_count) - get_bits_required(input_count + oldCount); j++) {
-          resizedInputTrait = resizedInputTrait + '0'
-        }
-        
-        resizedInputTrait = resizedInputTrait + genomeNumberToString(testEntity.genome[i], oldGeneLength).substring(0, get_bits_required(input_count + oldCount))
-
-        // todo: have to check if we should do output too. can't assume output needs to be resized if input does
-
-        let resizedOutputTrait = ''
-
-        for (let j = 0; j < get_bits_required(output_count + inner_count) - get_bits_required(output_count + oldCount); j++) {
-          resizedOutputTrait = resizedOutputTrait + '0'
-        }
-        
-        resizedOutputTrait = resizedOutputTrait + genomeNumberToString(testEntity.genome[i], oldGeneLength).substring(0, get_bits_required(output_count + oldCount))
-
-        testEntity.genome[i] = resizedInputTrait + resizedOutputTrait + genomeNumberToString(testEntity.genome[i], oldGeneLength).substring(oldGeneLength - precision)
-      }
-
-      tempGeneLength = gene_length
-      tempInnerCount = inner_count
-    }
+function outputNodeClassToGenomeIndex(outputNodeClass) {
+  if (outputNodeClass >= Object.keys(OutputNodeClasses).length) { // outputNodeClass is an inner Node
+    return outputNodeClass - Object.keys(OutputNodeClasses).length
   }
 
-  for (let j = 0; j < inputSelectors.length; j++) {
-    if (oldCount > inner_count) {
-      for (let i = inner_count; i < oldCount; i++) {
-        inputSelectors[j].children[1].children[inputSelectors[j].children[1].children.length - 1].remove()
-      }
+  let genomeIndex = 0
 
-      let inputTrait = genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(0, get_bits_required(input_count + tempInnerCount))
-
-      if (genomeStringToNumber(inputTrait) >= oldCount) {
-        testEntity.genome[j] = genomeStringToNumber(genomeNumberToString(genomeStringToNumber(inputTrait) - 1, get_bits_required(input_count + tempInnerCount)) + genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(get_bits_required(input_count + tempInnerCount)))
-      }
-      else if (genomeStringToNumber(inputTrait) === oldCount - 1) { // if we removed the selected inner node
-        let newInputTraitNumber = inner_count - 1
-
-        if (inner_count === 0) {
-          newInputTraitNumber = input_count - 1
-        }
-
-        clickOption(inputSelectors[j].children[0], inputSelectors[j].children[1].children[inputSelectors[j].children[1].children.length - 1].textContent, inputSelectors[j].children[1])
-
-        testEntity.genome[j] = genomeStringToNumber(genomeNumberToString(newInputTraitNumber, get_bits_required(input_count + tempInnerCount)) + genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(get_bits_required(input_count + tempInnerCount)))
-      }
-    }
-    else if (oldCount < inner_count) {
-      for (let i = oldCount; i < inner_count; i++) {
-        const element = document.createElement('div');
-
-        element.appendChild(document.createTextNode('whaaa'))
-
-        element.className = 'option'
-
-        let neuronIndex = input_count + inner_count - 1;
-
-        element.onclick = () => {
-          clickOption(inputSelectors[j].children[0], 'whaaa', inputSelectors[j].children[1])
-          updateTestGenome(j, selectorNeuronToGenomeIndex(neuronIndex, input_count))
-        }
-
-        inputSelectors[j].children[1].appendChild(element);
-      }
-
-      let inputTrait = genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(0, get_bits_required(input_count + tempInnerCount))
-
-      if (genomeStringToNumber(inputTrait) >= oldCount) { // if an input node was selected
-        testEntity.genome[j] = genomeStringToNumber(genomeNumberToString(genomeStringToNumber(inputTrait) + 1, get_bits_required(input_count + tempInnerCount)) + genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(get_bits_required(input_count + tempInnerCount)))
-      }
-    }
-    
-    inputSelectors[j].children[0].onmouseenter = () => mouseEnter(inputSelectors[j], input_count + inner_count)
-  }
-
-  for (let j = 0; j < outputSelectors.length; j++) {
-    if (oldCount > inner_count) {
-      for (let i = inner_count; i < oldCount; i++) {
-        outputSelectors[j].children[1].children[outputSelectors[j].children[1].children.length - 1].remove()
-      }
-
-      let outputTrait = genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(get_bits_required(input_count + tempInnerCount), get_bits_required(input_count + tempInnerCount) + get_bits_required(output_count + tempInnerCount))
-
-      if (genomeStringToNumber(outputTrait) >= oldCount) {
-        testEntity.genome[j] = genomeStringToNumber(genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(0, get_bits_required(input_count + tempInnerCount)) + genomeNumberToString(genomeStringToNumber(outputTrait) - 1, get_bits_required(output_count + tempInnerCount)) + genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(tempGeneLength - precision))
-      }
-      else if (genomeStringToNumber(outputTrait) === oldCount - 1) { // if we removed the selected inner node
-        let newOutputTraitNumber = inner_count - 1
-
-        if (inner_count === 0) {
-          newOutputTraitNumber = output_count - 1
-        }
-
-        clickOption(outputSelectors[j].children[0], outputSelectors[j].children[1].children[outputSelectors[j].children[1].children.length - 1].textContent, outputSelectors[j].children[1])
-
-        testEntity.genome[j] = genomeStringToNumber(genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(0, get_bits_required(input_count + tempInnerCount)) + genomeNumberToString(newOutputTraitNumber, get_bits_required(output_count + tempInnerCount)) + genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(tempGeneLength - precision))
-      }
-    }
-    else if (oldCount < inner_count) {
-      for (let i = oldCount; i < inner_count; i++) {
-        const element = document.createElement('div');
-
-        element.appendChild(document.createTextNode('whaaa'))
-
-        element.className = 'option'
-
-        let neuronIndex = output_count + inner_count - 1;
-
-        element.onclick = () => {
-          clickOption(outputSelectors[j].children[0], 'whaaa', outputSelectors[j].children[1])
-          updateTestGenome(j, undefined, selectorNeuronToGenomeIndex(neuronIndex, output_count))
-        }
-
-        outputSelectors[j].children[1].appendChild(element);
-      }
-
-      let outputTrait = genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(get_bits_required(input_count + tempInnerCount), get_bits_required(input_count + tempInnerCount) + get_bits_required(output_count + tempInnerCount))
-
-      if (genomeStringToNumber(outputTrait) >= oldCount) {
-        testEntity.genome[j] = genomeStringToNumber(genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(0, get_bits_required(input_count + tempInnerCount)) + genomeNumberToString(genomeStringToNumber(outputTrait) + 1, get_bits_required(output_count + tempInnerCount)) + genomeNumberToString(testEntity.genome[j], tempGeneLength).substring(get_bits_required(input_count + tempInnerCount) + get_bits_required(output_count + tempInnerCount)))
-      }
-    }
-
-    outputSelectors[j].children[0].onmouseenter = () => mouseEnter(outputSelectors[j], output_count + inner_count)
-  }
-
-  if (oldCount > inner_count) {
-    if (get_bits_required(input_count + oldCount) !== get_bits_required(input_count + inner_count)) { // input trait length decreased
-      for (let i = 0; i < connections; i++) {
-        let resizedInputTrait = genomeNumberToString(testEntity.genome[i], oldGeneLength).substring(get_bits_required(input_count + oldCount) - get_bits_required(input_count + inner_count), get_bits_required(input_count + oldCount))
-
-        let resizedOutputTrait = genomeNumberToString(testEntity.genome[i], oldGeneLength).substring(get_bits_required(input_count + oldCount) + get_bits_required(output_count + oldCount) - get_bits_required(output_count + inner_count), get_bits_required(input_count + oldCount) + get_bits_required(output_count + oldCount))
-
-        testEntity.genome[i] = genomeStringToNumber(resizedInputTrait + resizedOutputTrait + genomeNumberToString(testEntity.genome[i], oldGeneLength).substring(oldGeneLength - precision))
-      }
+  for (let i = 0; i < outputNodeClass; i++) {
+    if (enabledOutputNodes[i]) {
+      genomeIndex++
     }
   }
+  return genomeIndex + inner_count
 }
 
 function updatePrecision(entity, oldPrecision) {
@@ -2234,6 +2130,36 @@ function updatePrecision(entity, oldPrecision) {
     entity.genome[i] = genomeStringToNumber(genomeNumberToString(entity.genome[i], oldGeneLength).substring(0, oldGeneLength - oldPrecision) + genomeNumberToString(weight, precision))
     
     testValidateGene(entity.genome[i])
+  }
+}
+
+function testValidateGene(gene) {
+  if (typeof(gene) != 'number') {
+    throw new Error('gene is not number: ' + gene)
+  }
+
+  let geneString = genomeNumberToString(gene, gene_length)
+  let inputTrait = getInputTrait(gene, true)
+  let outputTrait = getOutputTrait(gene, true)
+  let precisionTrait = getPrecisionTrait(gene, true)
+
+  if (inputTrait >= input_count + inner_count) {
+    throw new Error('input trait too large: ' + geneString)
+  }
+  if (outputTrait >= output_count + inner_count) {
+    throw new Error('output trait too large: ' + geneString)
+  }
+  if (precisionTrait >= Math.pow(2, precision)) {
+    throw new Error('precision trait too large: ' + geneString + ' ' + precisionTrait)
+  }
+  if (inputTrait < 0) {
+    throw new Error('input trait negative: ' + geneString)
+  }
+  if (outputTrait < 0) {
+    throw new Error('output trait negative: ' + geneString)
+  }
+  if (precisionTrait < 0) {
+    throw new Error('precision trait negative: ' + geneString)
   }
 }
 
@@ -2408,10 +2334,93 @@ function expandNeurons() {
 
 function expandGoals() {
   if (document.getElementById('goals').className === 'test') {
-    // document.getElementById('goals').style.setProperty('--height', '');
+    // todo: make this height dynamic
+    document.getElementById('goals').style.setProperty('--height', '264px');
     document.getElementById('goals').className = 'expanded'
   }
   else {
     document.getElementById('goals').className = 'test'
+  }
+}
+
+function updateTestInputSelectors(isAdd, index, oldInnerCount, inputNodeClassIndex) {
+  for (let i = 0; i < connections; i++) {
+    let dropdown = inputSelectors[i].children[1]
+    let selectorIndex = genomeNeuronToSelectorIndex(index, input_count, oldInnerCount)
+
+    if (isAdd) {
+      const element = document.createElement('div');
+      element.className = 'option'
+
+      if (inputNodeClassIndex >= Object.keys(InputNodeClasses).length) { // if adding an inner node
+        element.appendChild(document.createTextNode('Inner ' + (inner_count - 1)))
+    
+        element.onclick = () => {
+          clickOption(inputSelectors[i].children[0], 'Inner ' + (inner_count - 1), dropdown)
+          updateTestGenome(i, inputNodeClassIndex)
+        }
+
+        dropdown.appendChild(element)
+      }
+      else {
+        element.appendChild(document.createTextNode(InputNodeClasses[inputNodeClassIndex].name))
+
+        element.onclick = () => {
+          clickOption(inputSelectors[i].children[0], InputNodeClasses[inputNodeClassIndex].name, dropdown)
+          updateTestGenome(i, inputNodeClassIndex)
+        }
+
+        dropdown.insertBefore(element, dropdown.children[selectorIndex])
+      }
+    }
+    else {
+      let removed = dropdown.children[selectorIndex]
+      dropdown.removeChild(removed)
+
+      if (removed.textContent === inputSelectors[i].children[0].textContent) { // if we removed the selected neuron, update the selected text
+        inputSelectors[i].children[0].textContent = inputSelectors[i].children[1].children[genomeNeuronToSelectorIndex(getInputTrait(testEntity.genome[i], true), input_count)].textContent
+      }
+    }
+  }
+}
+
+function updateTestOutputSelectors(isAdd, index, oldInnerCount, outputNodeClassIndex) {
+  for (let i = 0; i < connections; i++) {
+    let dropdown = outputSelectors[i].children[1]
+    let selectorIndex = genomeNeuronToSelectorIndex(index, output_count, oldInnerCount)
+
+    if (isAdd) {
+      const element = document.createElement('div');
+      element.className = 'option'
+
+      if (outputNodeClassIndex >= Object.keys(OutputNodeClasses).length) { // if adding an inner node
+        element.appendChild(document.createTextNode('Inner ' + (inner_count - 1)))
+    
+        element.onclick = () => {
+          clickOption(outputSelectors[i].children[0], 'Inner ' + (inner_count - 1), dropdown)
+          updateTestGenome(i, undefined, outputNodeClassIndex)
+        }
+
+        dropdown.appendChild(element)
+      }
+      else {
+        element.appendChild(document.createTextNode(OutputNodeClasses[outputNodeClassIndex].name))
+
+        element.onclick = () => {
+          clickOption(outputSelectors[i].children[0], OutputNodeClasses[outputNodeClassIndex].name, dropdown)
+          updateTestGenome(i, undefined, outputNodeClassIndex)
+        }
+
+        dropdown.insertBefore(element, dropdown.children[selectorIndex])
+      }
+    }
+    else {
+      let removed = dropdown.children[selectorIndex]
+      dropdown.removeChild(removed)
+
+      if (removed.textContent === outputSelectors[i].children[0].textContent) { // if we removed the selected neuron, update the selected text
+        outputSelectors[i].children[0].textContent = outputSelectors[i].children[1].children[genomeNeuronToSelectorIndex(getOutputTrait(testEntity.genome[i], true), output_count)].textContent
+      }
+    }
   }
 }

@@ -41,9 +41,9 @@
             <button type="button" onclick="decreasePrecision()" class="updown">-</button>
             <button type="button" onclick="increasePrecision()" class="updown">+</button>
             <p>Inner Nodes</p>
-            <input id="inner" type="number" oninput="changeInner(this.value)"/>
-            <button type="button" onclick="decreaseInner()" class="updown">-</button>
-            <button type="button" onclick="increaseInner()" class="updown">+</button>
+            <input id="inner" type="number" oninput="setInner(this.value)"/>
+            <button type="button" onclick="changeInner(-1)" class="updown">-</button>
+            <button type="button" onclick="changeInner(1)" class="updown">+</button>
                 
             <div id="neurons" class="test">
                 <button id="genomeExpander" class="genomeExpander" onclick="expandNeurons()">Neurons</button>
