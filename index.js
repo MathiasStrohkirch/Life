@@ -450,6 +450,7 @@ class Entity {
       this.biases.push(Math.floor(Math.random() * (Math.pow(2, precision) - 2)))
     }
     console.log(this.biases)
+    // ssh test
   }
 
   move(x, y) {
