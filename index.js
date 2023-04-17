@@ -16,6 +16,11 @@
 // what happens when all input or output nodes are disabled?
 // switch up and down nodes
 // positive input node acts like a bias, but should still add an inherent bias
+// draw barriers on screen
+// make weight slider look better
+// make more class-based
+// refactor into multiple js files
+// camel case all variables
 
 // crashes: change entities to 1. increase entities while playing
 
@@ -438,6 +443,13 @@ class Entity {
         a
       );
     }
+  }
+
+  generateBiases() {
+    for (let i = 0; i < inner_count + input_count + output_count; i++) {
+      this.biases.push(Math.floor(Math.random() * (Math.pow(2, precision) - 2)))
+    }
+    console.log(this.biases)
   }
 
   move(x, y) {
@@ -1616,6 +1628,7 @@ function run() {
     
   for (const entity of entities) {
     entity.generate_genome()
+    entity.generateBiases();
   }
 
   selectedEntity = undefined;
