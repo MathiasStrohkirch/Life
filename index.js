@@ -446,11 +446,10 @@ class Entity {
   }
 
   generateBiases() {
-    for (let i = 0; i < inner_count + input_count + output_count; i++) {
+    for (let i = 0; i < connections; i++) {
       this.biases.push(Math.floor(Math.random() * (Math.pow(2, precision) - 2)))
     }
     console.log(this.biases)
-    // ssh test
   }
 
   move(x, y) {
@@ -1523,6 +1522,7 @@ function click(e) {
   let [data, genome] = entitiesPositionIndex[x][y][0].getNeuralNetworkData()
   drawnNeuralNetworkGenome = genome
   drawNeuralNetwork(data)
+  document.getElementById("copyToTest").className = ''
 }
 
 function showGoals() {

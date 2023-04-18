@@ -9,7 +9,22 @@ body {
   margin-top: 10px;
   display: flex;
   flex-direction: row;
+  margin-bottom: 10px;
+}
+
+.expanded > .switchRow {
+  margin-top: 10px;
   margin-left: 10px;
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 10px;
+}
+
+.test > .switchRow {
+  margin-top: 10px;
+  margin-left: 10px;
+  display: flex;
+  flex-direction: row;
   margin-bottom: 10px;
 }
 
@@ -307,6 +322,8 @@ input:checked ~ .slider::before {
   height: 29px;
   animation-name: collapse;
   animation-duration: .5s;
+  margin-top: 20;
+  margin-bottom: 20px;
 }
 
 .testExpander {
@@ -405,6 +422,8 @@ input:checked ~ .slider::before {
   border: 1px solid #eeeeee;
   border-radius: 15px;
   overflow: hidden;
+  margin-top: 20;
+  margin-bottom: 20px;
 }
 
 .testPadding {

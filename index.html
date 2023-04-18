@@ -12,7 +12,7 @@
             <input id="entities" type="number" oninput="changeEntities(this.value)"/>
             <button type="button" onclick="decreaseEntities()" class="updown">-</button>
             <button type="button" onclick="increaseEntities()" class="updown">+</button>
-            <p>Cycles</p>
+            <p>Steps</p>
             <input id="cycles" type="number" oninput="changeCycles(this.value)"/>
             <button type="button" onclick="decreaseCycles()" class="updown">-</button>
             <button type="button" onclick="increaseCycles()" class="updown">+</button>
@@ -23,15 +23,7 @@
             <p>Reactiveness</p>
             <input id="reactiveness" type="number" oninput="changeReactiveness(this.value)"/>
             <button type="button" onclick="decreaseReactiveness()" class="updown">-</button>
-            <button type="button" onclick="increaseReactiveness()" class="updown">+</button>
-            <div class="switchRow">
-                <label class="switch">
-                    <input type="checkbox" id="allowOverlap">
-                    <span class="slider round"></span>
-                </label>
-                <p>Allow Overlap</p>
-            </div>
-            
+            <button type="button" onclick="increaseReactiveness()" class="updown">+</button>            
             <p>Connections</p>
             <input id="connections" type="number" oninput="changeConnections(this.value)"/>
             <button type="button" onclick="decreaseConnections()" class="updown">-</button>
@@ -44,6 +36,13 @@
             <input id="inner" type="number" oninput="setInner(this.value)"/>
             <button type="button" onclick="changeInner(-1)" class="updown">-</button>
             <button type="button" onclick="changeInner(1)" class="updown">+</button>
+            <div class="switchRow">
+                <label class="switch">
+                    <input type="checkbox" id="allowOverlap">
+                    <span class="slider round"></span>
+                </label>
+                <p>Allow Overlap</p>
+            </div>
                 
             <div id="neurons" class="test">
                 <button id="genomeExpander" class="genomeExpander" onclick="expandNeurons()">Neurons</button>
@@ -82,7 +81,7 @@
         <div id="canvasControls">
             <p id="generationLabel">Generation</p>
             <p id="generation">0</p>
-            <p id="cycleLabel">Cycle </p>
+            <p id="cycleLabel">Step</p>
             <p id="cycle">0</p>
             <p id="speedLabel">Speed </p>
             <input id="speed" type="number" min="0" step="1" oninput="changeSpeed(this.value)"/>
@@ -108,7 +107,7 @@
             </br>
             <canvas id="neuralNetworkCanvas" width="230" height="300" style="margin:0px; margin-top: 25px"></canvas>
             </br>
-            <button type="button" onclick="copyToTest()">Copy to Test</button>
+            <button id="copyToTest" type="button" onclick="copyToTest()" class="hidden">Copy to Test</button>
         </div>
     </body>
 </html>
