@@ -429,3 +429,7 @@ input:checked ~ .slider::before {
 .testPadding {
   padding: 10px;
 }
+
+.tempMargin {
+  margin-bottom: 15px;
+}

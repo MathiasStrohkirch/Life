@@ -305,6 +305,8 @@ class Entity {
     this.inner_neurons = []
     this.output_neurons = []
     this.neurons = []
+    this.isMutated = false;
+
     if (!(document.getElementById('allowOverlap').checked)) {
       while (true) {
         this.x = Math.floor(Math.random() * 100)
@@ -396,6 +398,7 @@ class Entity {
 
       if (validateGene(new_gene)) {
         mutated = true
+        this.isMutated = true
         break
       }
     }
@@ -954,7 +957,7 @@ function drawCycle() {
 
   if (drawingData) {
     for (let i = 0; i < entities.length; i++) {
-      drawEntity(drawingData[i].x, drawingData[i].y, entities[i] === selectedEntity ? "#527ede" : undefined);
+      drawEntity(drawingData[i].x, drawingData[i].y, entities[i] === selectedEntity ? "#527ede" : (document.getElementById('showMutations').checked && entities[i].isMutated ? "#de5252" : undefined));
     }
   }
 
@@ -1511,7 +1514,7 @@ function click(e) {
   const x = Math.floor(e.offsetX / (e.target.clientWidth / 100));
   const y = Math.floor(e.offsetY / (e.target.clientHeight / 100));
   if (selectedEntity && !(selectedEntity.x === x && selectedEntity.y === y)) {
-    drawEntity(selectedEntity.x, selectedEntity.y)
+    drawEntity(selectedEntity.x, selectedEntity.y, (document.getElementById('showMutations').checked && selectedEntity.isMutated ? "#de5252" : undefined))
   }
   if (!entitiesPositionIndex || !(x in entitiesPositionIndex) || !(y in entitiesPositionIndex[x]) || entitiesPositionIndex[x][y].length === 0) {
     selectedEntity = undefined;
@@ -1526,6 +1529,10 @@ function click(e) {
 }
 
 function showGoals() {
+  drawCycle();
+}
+
+function showMutations() {
   drawCycle();
 }
 

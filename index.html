@@ -80,26 +80,26 @@
         </canvas>
         <div id="canvasControls">
             <p id="generationLabel">Generation</p>
-            <p id="generation">0</p>
+            <p id="generation" class="tempMargin">0</p>
             <p id="cycleLabel">Step</p>
-            <p id="cycle">0</p>
+            <p id="cycle" class="tempMargin">0</p>
             <p id="speedLabel">Speed </p>
             <input id="speed" type="number" min="0" step="1" oninput="changeSpeed(this.value)"/>
             <button type="button" onclick="decreaseSpeed()" class="updown">-</button>
             <button type="button" onclick="increaseSpeed()" class="updown">+</button>
+            <div class="tempMargin"></div>
+            <button id="playPause" type="button" onclick="playPause()" class="tempMargin">Play</button>
             </br>
-            <button id="playPause" type="button" onclick="playPause()">Play</button>
-            </br>
-            <div class="switchRow">
+            <div class="switchRow tempMargin">
                 <label class="switch">
                     <input type="checkbox" id="showGoals" onclick="showGoals()">
                     <span class="slider round"></span>
                 </label>
                 <p>Show Goals</p>
             </div>
-            <div class="switchRow">
+            <div class="switchRow tempMargin">
                 <label class="switch">
-                    <input type="checkbox">
+                    <input type="checkbox" id="showMutations" onclick="showMutations()">
                     <span class="slider round"></span>
                 </label>
                 <p>Show Mutations</p>
