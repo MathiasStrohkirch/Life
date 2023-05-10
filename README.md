@@ -2,6 +2,8 @@
 
 Life is an application in which a user can define goals and constraints for Entities that use the Genetic Algorigm and Neural Networks to try to meet said goals.
 
+This application uses vanilla JavaScript and does not require anything additional to run. Just download the 3 files and open index.html in a web browser.
+
 ## Entities
 Entities are 1x1 beings that exist in a 100x100 2D world. Each Entity has a Neural Network brain that determiens its behavior.
 
