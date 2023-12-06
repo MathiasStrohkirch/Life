@@ -2,7 +2,7 @@
 
 Life is an application in which a user can define goals and constraints for Entities that use the Genetic Algorigm and Neural Networks to try to meet said goals.
 
-This application uses vanilla JavaScript and does not require anything additional to run. Just download the 3 files and open index.html in a web browser.
+This application uses vanilla JavaScript and does not require anything additional to run. Just download (3 files), unzip, and open index.html in a web browser.
 
 ## PLEASE USE CHROME. This is not tested with any other browser and will very likely have major UI issues
 ## Up and down neurons are currently switched (oops)
