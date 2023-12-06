@@ -4,7 +4,8 @@ Life is an application in which a user can define goals and constraints for Enti
 
 This application uses vanilla JavaScript and does not require anything additional to run. Just download the 3 files and open index.html in a web browser.
 
-PLEASE USE CHROME. This is not tested with any other browser and will very likely have major UI issues
+## PLEASE USE CHROME. This is not tested with any other browser and will very likely have major UI issues
+## Up and down neurons are currently switched (oops)
 
 ![image](https://github.com/MathiasStrohkirch/Life/assets/42854178/95da4de7-3b1b-46dc-b5ad-388936cfee89)
 
